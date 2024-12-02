@@ -24,7 +24,7 @@ if __name__ == '__main__':
     proj_mercator = pyproj.Proj(projparams='PROJCS["ETRS_1989_Poland_CS92",GEOGCS["GCS_ETRF2000-PL",DATUM["D_ETRF2000_Poland",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Transverse_Mercator"],PARAMETER["False_Easting",500000.0],PARAMETER["False_Northing",-5300000.0],PARAMETER["Central_Meridian",19.0],PARAMETER["Scale_Factor",0.9993],PARAMETER["Latitude_Of_Origin",0.0],UNIT["Meter",1.0]]')
     transformer = pyproj.Transformer.from_proj(proj_from=proj_wgs84, proj_to=proj_mercator)
 
-    with open('wca_export/WCA_export_Competitions.tsv', encoding='utf-8') as compsfile:
+    with open('WCA_export/WCA_export_Competitions.tsv', encoding='utf-8') as compsfile:
         for row in compsfile:
             data = row.rstrip('\n').split('\t')
             if data[0] != 'id':
@@ -41,7 +41,7 @@ if __name__ == '__main__':
     all_regions = set([region[4] for region in records])    
     person_comps = collections.defaultdict(set)
 
-    with open('wca_export/WCA_export_Results.tsv', encoding='utf-8') as resultsfile:
+    with open('WCA_export/WCA_export_Results.tsv', encoding='utf-8') as resultsfile:
         for row in resultsfile:
             data = row.rstrip('\n').split('\t')
             comp_name = data[0]
