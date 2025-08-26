@@ -1,0 +1,33 @@
+tr:nth-child(even){
+    background-color: #D6EEEE;
+}
+table {
+    table-layout: fixed;
+    margin: 0 auto;
+    border-collapse: collapse;
+}
+td, tr {
+    padding: 0.6em;
+}
+thead{
+    position: sticky;
+    top: 0;
+    background: white;
+    text-align: left;
+}
+a:visited{
+    color: blue;
+}
+th {
+    padding: 0 0.6em 0 0.6em
+}
+.noComp{
+    font-style: italic;
+    color: gray;
+}
+.topMenu{
+    width: 100%;
+    position: sticky;
+    top: 0;
+    text-align: center;
+}

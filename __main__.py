@@ -4,7 +4,10 @@ from time import time
 import collections
 import datetime
 import mysql.connector
+import os
+import shutil
 
+from secrets import *
 from localconfig import configs
 
 def getRegion(point, shapes, records):
@@ -13,12 +16,31 @@ def getRegion(point, shapes, records):
             return record[0 if len(record) == 1 else 4]
     return None
 
+def table_head(elements):
+    row = '<thead><tr>'
+    for element in elements:
+        row += f'<th>{element}</th>'
+    row += '</tr></thead>'
+    return row
+
+def table_row(elements):
+    row = '<tr>'
+    for element in elements:
+        row += f'<td>{element}</td>'
+    row += '</tr>'
+    return row
+
+def link(title, url):
+    return f'<a href="{url}">{title}</a>'
 
 if __name__ == '__main__':
-    mydb = mysql.connector.connect(host = "192.168.0.223", user="wca", database="wca")
+    mydb = mysql.connector.connect(host = SECRET_HOST, user = SECRET_USER, database = SECRET_DATABASE, password = SECRET_PASSWORD)
     cursor = mydb.cursor()
+    if os.path.isdir('output'):
+        shutil.rmtree('output')
 
-    for current_config in configs:
+
+    for current_config in configs[::-1]:
 
         print(f'Running {current_config['country']}/{current_config['name']}')
         time_start = time()
@@ -68,14 +90,43 @@ if __name__ == '__main__':
 
         all_persons = list(person_comps.keys())
         all_persons.sort(key=lambda x: len(person_regions[x]), reverse=True)
+        
+        folder_path = os.path.join('output', current_config['country'])
+        file_path = os.path.join('output', current_config['country'], current_config['path_name']+'.html')
+        if not os.path.isdir(folder_path):
+            os.makedirs(folder_path)
+        with open(file_path, 'w') as file:
+            with open('templates/region_ranking.html') as template:
+                template_text = ''.join([line for line in template])
+                start, end = template_text.split('%')
+                file.write(start)
+                file.write('<table>')
+                file.write(table_head(['Person', 'Region count', f'Missing (up to {current_config['maxMissing']})']))
+                for person in all_persons[:current_config['printNumber']]:
+                    count = len(person_regions[person])
+                    missing = all_regions.difference(person_regions[person])
+                    missing_text = ''
+                    if len(missing) <= current_config['maxMissing']:
+                        missing_with_comp = []
+                        missing_without_comp = []
+                        for region in missing:
+                            if region not in comp_regions.values():
+                                missing_without_comp.append(region)
+                            else:
+                                missing_with_comp.append(region)
 
-        for person in all_persons[:current_config['printNumber']]:
-            count = len(person_regions[person])
-            missing = all_regions.difference(person_regions[person])
-            print(f"{person}: {count}/{len(all_regions)}", end='')
-            if len(missing) and len(missing) <= current_config['maxMissing']:
-                print(f", missing: {missing}")
-            else:
-                print()
-
+                        missing_with_comp.sort()
+                        missing_without_comp.sort()
+                        if len(missing_without_comp):
+                            missing_without_comp[0] = '<span class="noComp">' + missing_without_comp[0]
+                            if len(missing_with_comp):
+                                missing_with_comp[0] = '</span>' + missing_with_comp[0]
+                            else:
+                                missing_without_comp[-1] += '</span>'
+                        missing_text = ', '.join(missing_without_comp + missing_with_comp)
+                    cursor.execute("select name from Persons where id=%(id)s and subid=1 limit 1;", {"id": person})
+                    person_name = cursor.fetchall()[0][0]
+                    file.write(table_row([link(person_name, f'https://www.worldcubeassociation.org/persons/{person}'), f'{count}/{len(all_regions)}', missing_text]))
+                file.write('</table>')
+                file.write(end)
     
