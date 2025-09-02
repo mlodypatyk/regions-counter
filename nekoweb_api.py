@@ -10,7 +10,6 @@ def create_folder(folder_name):
         "Authorization": API_KEY,
         "content-type": "application/x-www-form-urlencoded"
     }
-    print(f'Creating remote folder for {config['country']}')
     response = requests.request("POST", api_url+'files/create', data=payload, headers=headers)
     return response
 

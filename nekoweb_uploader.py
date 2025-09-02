@@ -21,6 +21,7 @@ if __name__ == '__main__':
         path_name = config['path_name']
         folders = [token['name'] for token in directory_data if token['dir']]
         if country not in folders:
+            print(f'Creating remote folder for {country}')
             response = nekoweb_api.create_folder(country)
             
             if response.ok:
@@ -38,6 +39,16 @@ if __name__ == '__main__':
         else:
             print("mi bombo")
             print(response.text)
+
+    menu_file_path = 'output/index.html'
+    files = {"files": open(menu_file_path, 'rb')}
+    print('Uploading menu file')
+    response = nekoweb_api.upload_file('', files)
+    if response.ok:
+        print("Succesfully uploaded")
+    else:
+        print("mi bombo")
+        print(response.text)
 
         
         
