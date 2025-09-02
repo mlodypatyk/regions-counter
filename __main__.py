@@ -7,7 +7,7 @@ import mysql.connector
 import os
 import shutil
 
-from secrets import *
+from dbsecrets import *
 from localconfig import configs
 
 def getRegion(point, shapes, records):
@@ -34,7 +34,11 @@ def link(title, url):
     return f'<a href="{url}">{title}</a>'
 
 if __name__ == '__main__':
-    mydb = mysql.connector.connect(host = SECRET_HOST, user = SECRET_USER, database = SECRET_DATABASE, password = SECRET_PASSWORD)
+    mydb = None
+    if SECRET_PASSWORD:
+        mydb = mysql.connector.connect(host = SECRET_HOST, user = SECRET_USER, database = SECRET_DATABASE, password = SECRET_PASSWORD)
+    else:
+        mydb = mysql.connector.connect(host = SECRET_HOST, user = SECRET_USER, database = SECRET_DATABASE)
     cursor = mydb.cursor()
     if os.path.isdir('output'):
         shutil.rmtree('output')
@@ -95,7 +99,7 @@ if __name__ == '__main__':
         file_path = os.path.join('output', current_config['country'], current_config['path_name']+'.html')
         if not os.path.isdir(folder_path):
             os.makedirs(folder_path)
-        with open(file_path, 'w') as file:
+        with open(file_path, 'w', encoding='utf-8') as file:
             with open('templates/region_ranking.html') as template:
                 template_text = ''.join([line for line in template])
                 start, end = template_text.split('%')
