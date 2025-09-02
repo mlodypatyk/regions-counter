@@ -10,10 +10,10 @@ import shutil
 from dbsecrets import *
 from localconfig import configs
 
-def getRegion(point, shapes, records):
+def getRegion(point, shapes, records, namePos):
     for shape, record in zip(shapes, records):
         if shapefile.ring_contains_point(shape.points, point):
-            return record[0 if len(record) == 1 else 4]
+            return record[namePos]
     return None
 
 def table_head(elements):
@@ -42,8 +42,7 @@ if __name__ == '__main__':
     cursor = mydb.cursor()
     if os.path.isdir('output'):
         shutil.rmtree('output')
-
-
+           
     for current_config in configs[::-1]:
 
         print(f'Running {current_config['country']}/{current_config['name']}')
@@ -69,13 +68,13 @@ if __name__ == '__main__':
             date = datetime.datetime(year, month, day)
             #print(id, countryId, lat, lon)
             if countryId == current_config['country'] and date < datetime.datetime.now():
-                current_region = getRegion(transformer.transform(lat, lon), shapes, records)
+                current_region = getRegion(transformer.transform(lat, lon), shapes, records, current_config['namePos'])
                 if current_region:
                     comp_regions[id] = current_region
 
         print(f"Loaded comp regions in: {time() - time_start}s")
 
-        all_regions = set([region[0 if len(region) == 1 else 4] for region in records])
+        all_regions = set([region[current_config['namePos']] for region in records])
         person_comps = collections.defaultdict(set)
 
         cursor.execute('select competitionId, personId from Results;')
@@ -133,4 +132,25 @@ if __name__ == '__main__':
                     file.write(table_row([link(person_name, f'https://www.worldcubeassociation.org/persons/{person}'), f'{count}/{len(all_regions)}', missing_text]))
                 file.write('</table>')
                 file.write(end)
+
+    # Generate menu file
+    countries = collections.defaultdict(list)
+    for config in configs:
+        countries[config['country']].append(config)
+
+    with open('output/index.html', 'w', encoding='utf-8') as menufile:
+        with open('templates/menu_file.html') as template:
+            template_text = ''.join([line for line in template])
+            start, end = template_text.split('%')
+            menufile.write(start)
+            for country in sorted(list(countries.keys())):
+                menufile.write(f'<h1>{country}</h1>')
+                for config in countries[country]:
+                    country = config['country']
+                    path = config['path_name']
+                    name = config['name']
+                    menufile.write('<p>')
+                    menufile.write(link(name, f'{country}/{path}.html'))
+                    menufile.write('</p>')
+            menufile.write(end)
     
