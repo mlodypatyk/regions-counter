@@ -7,7 +7,8 @@ dependencies = [
     "pyshp",
     "pyproj",
     "mysql.connector",
-    "requests"
+    "requests",
+    "shapely"
 ]
 
 [tool.setuptools]

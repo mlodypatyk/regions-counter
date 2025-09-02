@@ -6,6 +6,7 @@ import datetime
 import mysql.connector
 import os
 import shutil
+from shapely.geometry import Point, shape
 
 from dbsecrets import *
 from localconfig import configs
@@ -13,9 +14,15 @@ from localconfig import configs
 global logtext
 
 def getRegion(point, shapes, records, namePos):
-    for shape, record in zip(shapes, records):
-        if shapefile.ring_contains_point(shape.points, point):
-            return record[namePos]
+    potential_results = []
+    for polygon, record in zip(shapes, records):
+        if point.within(polygon):
+            potential_results.append(record[namePos])
+    if len(potential_results) > 1:
+        log("SIUR NA OGÓLNYM")
+        log(potential_results)
+    if potential_results:
+        return potential_results[0]
     return None
 
 def table_head(elements):
@@ -58,10 +65,13 @@ if __name__ == '__main__':
 
         log(f'Running {current_config['country']}/{current_config['name']}')
         time_start = time()
+        try:
+            sf = shapefile.Reader(current_config['filePath'])   
+        except FileNotFoundError:
+            log(f'File for {current_config['country']}/{current_config['name']} is missing.')
+            continue
 
-        sf = shapefile.Reader(current_config['filePath'])
-
-        shapes = sf.shapes()
+        shapes = [shape(x) for x in sf.shapes()]
         records = sf.records()
 
         comp_regions = {}
@@ -79,7 +89,7 @@ if __name__ == '__main__':
             date = datetime.datetime(year, month, day)
             #print(id, countryId, lat, lon)
             if countryId == current_config['country'] and date < datetime.datetime.now():
-                current_region = getRegion(transformer.transform(lat, lon), shapes, records, current_config['namePos'])
+                current_region = getRegion(Point(transformer.transform(lat, lon)), shapes, records, current_config['namePos'])
                 if current_region:
                     comp_regions[id] = current_region
 
