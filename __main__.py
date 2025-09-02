@@ -1,6 +1,6 @@
 import shapefile
 import pyproj
-from time import time
+from time import time, ctime
 import collections
 import datetime
 import mysql.connector
@@ -9,6 +9,8 @@ import shutil
 
 from dbsecrets import *
 from localconfig import configs
+
+global logtext
 
 def getRegion(point, shapes, records, namePos):
     for shape, record in zip(shapes, records):
@@ -33,6 +35,12 @@ def table_row(elements):
 def link(title, url):
     return f'<a href="{url}">{title}</a>'
 
+def log(text):
+    global logtext
+    print(text)
+    logtext += f'<p>{text}</p>'
+
+
 if __name__ == '__main__':
     mydb = None
     if SECRET_PASSWORD:
@@ -42,10 +50,13 @@ if __name__ == '__main__':
     cursor = mydb.cursor()
     if os.path.isdir('output'):
         shutil.rmtree('output')
+
+    logtext = ''
+    log(f'Started script at {ctime()}')
            
     for current_config in configs[::-1]:
 
-        print(f'Running {current_config['country']}/{current_config['name']}')
+        log(f'Running {current_config['country']}/{current_config['name']}')
         time_start = time()
 
         sf = shapefile.Reader(current_config['filePath'])
@@ -72,7 +83,7 @@ if __name__ == '__main__':
                 if current_region:
                     comp_regions[id] = current_region
 
-        print(f"Loaded comp regions in: {time() - time_start}s")
+        log(f"Loaded comp regions in: {time() - time_start}s")
 
         all_regions = set([region[current_config['namePos']] for region in records])
         person_comps = collections.defaultdict(set)
@@ -83,7 +94,7 @@ if __name__ == '__main__':
             if comp_name in comp_regions:
                 person_comps[person].add(comp_name)
 
-        print(f"Loaded person comps in: {time() - time_start}s")
+        log(f"Loaded person comps in: {time() - time_start}s")
 
         person_regions = collections.defaultdict(set)
 
@@ -153,4 +164,16 @@ if __name__ == '__main__':
                     menufile.write(link(name, f'{country}/{path}.html'))
                     menufile.write('</p>')
             menufile.write(end)
+
+    log(f'Stopped script at {ctime()}')
+
+    # Generate log file
+    with open('output/log.html', 'w', encoding='utf-8') as logfile:
+        with open('templates/log_file.html') as template:
+            template_text = ''.join([line for line in template])
+            start, end = template_text.split('%')
+            logfile.write(start)
+            logfile.write(logtext)
+            logfile.write(end)
+
     

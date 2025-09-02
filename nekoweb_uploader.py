@@ -40,15 +40,17 @@ if __name__ == '__main__':
             print("mi bombo")
             print(response.text)
 
-    menu_file_path = 'output/index.html'
-    files = {"files": open(menu_file_path, 'rb')}
-    print('Uploading menu file')
-    response = nekoweb_api.upload_file('', files)
-    if response.ok:
-        print("Succesfully uploaded")
-    else:
-        print("mi bombo")
-        print(response.text)
+    other_files = ['index.html', 'log.html']
+    for file in other_files:
+        file_path = f'output/{file}'
+        files = {"files": open(file_path, 'rb')}
+        print(f'Uploading {file}')
+        response = nekoweb_api.upload_file('', files)
+        if response.ok:
+            print("Succesfully uploaded")
+        else:
+            print("mi bombo")
+            print(response.text)
 
         
         
