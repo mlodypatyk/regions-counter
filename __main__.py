@@ -71,7 +71,7 @@ if __name__ == '__main__':
             log(f'File for {current_config['country']}/{current_config['name']} is missing.')
             continue
 
-        shapes = [shape(x) for x in sf.shapes()]
+        shapes = [shape(x) for x in sf.shapes() if x.shapeType != 0]
         records = sf.records()
 
         comp_regions = {}
@@ -81,7 +81,7 @@ if __name__ == '__main__':
         proj_local = pyproj.Proj(projparams=current_config['projParams'])
         transformer = pyproj.Transformer.from_proj(proj_from=proj_wgs84, proj_to=proj_local)
 
-        cursor.execute("select id, countryId, latitude, longitude, year, month, day from Competitions;")
+        cursor.execute("select id, countryId, latitude, longitude, year, month, day from Competitions where cancelled != 1;")
 
         comp_dates = {}
 
@@ -93,6 +93,8 @@ if __name__ == '__main__':
             if countryId == current_config['country'] and date < datetime.datetime.now():
                 comp_dates[id] = date
                 current_region = getRegion(Point(transformer.transform(lat, lon)), shapes, records, current_config['namePos'])
+                if current_region == 'Rondonia':
+                    print(id)
                 if current_region:
                     comp_regions[id] = current_region
 
