@@ -1,4 +1,5 @@
 *.zip
 *.pyc
-secrets.py
+dbsecrets.py
+nekoweb_secrets.py
 output/*
