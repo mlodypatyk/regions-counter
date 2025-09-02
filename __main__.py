@@ -61,7 +61,7 @@ if __name__ == '__main__':
     logtext = ''
     log(f'Started script at {ctime()}')
            
-    for current_config in configs[::-1]:
+    for current_config in configs:
 
         log(f'Running {current_config['country']}/{current_config['name']}')
         time_start = time()
@@ -83,12 +83,15 @@ if __name__ == '__main__':
 
         cursor.execute("select id, countryId, latitude, longitude, year, month, day from Competitions;")
 
+        comp_dates = {}
+
         for id, countryId, lat, lon, year, month, day in cursor:
             lat /= 1_000_000
             lon /= 1_000_000
             date = datetime.datetime(year, month, day)
             #print(id, countryId, lat, lon)
             if countryId == current_config['country'] and date < datetime.datetime.now():
+                comp_dates[id] = date
                 current_region = getRegion(Point(transformer.transform(lat, lon)), shapes, records, current_config['namePos'])
                 if current_region:
                     comp_regions[id] = current_region
@@ -108,12 +111,16 @@ if __name__ == '__main__':
 
         person_regions = collections.defaultdict(set)
 
+        finished_people_last_comps = {}
+
         for person in person_comps:
-            for comp in person_comps[person]:
+            for comp in sorted(person_comps[person], key=lambda x: comp_dates[x]):
                 person_regions[person].add(comp_regions[comp])
+                if len(person_regions[person]) == len(all_regions) and person not in finished_people_last_comps:
+                    finished_people_last_comps[person] = comp
 
         all_persons = list(person_comps.keys())
-        all_persons.sort(key=lambda x: len(person_regions[x]), reverse=True)
+        all_persons.sort(key=lambda x: (-len(person_regions[x]), comp_dates[finished_people_last_comps[x]] if x in finished_people_last_comps else None))
         
         folder_path = os.path.join('output', current_config['country'])
         file_path = os.path.join('output', current_config['country'], current_config['path_name']+'.html')
@@ -125,32 +132,64 @@ if __name__ == '__main__':
                 start, end = template_text.split('%')
                 file.write(start)
                 file.write('<table>')
-                file.write(table_head(['Person', 'Region count', f'Missing (up to {current_config['maxMissing']})']))
-                for person in all_persons[:current_config['printNumber']]:
+                head = ['Position', 'Person', 'Region count']
+                render_missing = False
+                render_completed = False
+                if all_persons:
+                    if len(all_regions.difference(person_regions[all_persons[0]])) <= current_config['maxMissing']:
+                        render_missing = True
+                        head.append(f'Missing (up to {current_config['maxMissing']})')
+                    if len(person_regions[all_persons[0]]) == len(all_regions):
+                        render_completed = True
+                        head.append('Completed at')
+                file.write(table_head(head))
+                last_count = 0
+                last_last_comp = ''
+                last_pos = 0
+                for pos, person in enumerate(all_persons[:current_config['printNumber']]):
                     count = len(person_regions[person])
-                    missing = all_regions.difference(person_regions[person])
-                    missing_text = ''
-                    if len(missing) <= current_config['maxMissing']:
-                        missing_with_comp = []
-                        missing_without_comp = []
-                        for region in missing:
-                            if region not in comp_regions.values():
-                                missing_without_comp.append(region)
-                            else:
-                                missing_with_comp.append(region)
-
-                        missing_with_comp.sort()
-                        missing_without_comp.sort()
-                        if len(missing_without_comp):
-                            missing_without_comp[0] = '<span class="noComp">' + missing_without_comp[0]
-                            if len(missing_with_comp):
-                                missing_with_comp[0] = '</span>' + missing_with_comp[0]
-                            else:
-                                missing_without_comp[-1] += '</span>'
-                        missing_text = ', '.join(missing_without_comp + missing_with_comp)
                     cursor.execute("select name from Persons where id=%(id)s and subid=1 limit 1;", {"id": person})
                     person_name = cursor.fetchall()[0][0]
-                    file.write(table_row([link(person_name, f'https://www.worldcubeassociation.org/persons/{person}'), f'{count}/{len(all_regions)}', missing_text]))
+                    if count != last_count or (count == len(all_regions) and last_last_comp != finished_people_last_comps[person]):
+                        last_pos = pos + 1
+                    last_count = count
+                    last_last_comp = finished_people_last_comps[person] if person in finished_people_last_comps else ''
+
+                    row = [last_pos, link(person_name, f'https://www.worldcubeassociation.org/persons/{person}'), f'{count}/{len(all_regions)}']
+
+                    if render_missing:
+                        missing = all_regions.difference(person_regions[person])
+                        missing_text = ''
+                        if len(missing) <= current_config['maxMissing']:
+                            missing_with_comp = []
+                            missing_without_comp = []
+                            for region in missing:
+                                if region not in comp_regions.values():
+                                    missing_without_comp.append(region)
+                                else:
+                                    missing_with_comp.append(region)
+
+                            missing_with_comp.sort()
+                            missing_without_comp.sort()
+                            if len(missing_without_comp):
+                                missing_without_comp[0] = '<span class="noComp">' + missing_without_comp[0]
+                                if len(missing_with_comp):
+                                    missing_with_comp[0] = '</span>' + missing_with_comp[0]
+                                else:
+                                    missing_without_comp[-1] += '</span>'
+                            missing_text = ', '.join(missing_without_comp + missing_with_comp)
+                        row.append(missing_text)
+
+                    if render_completed:
+                        final_comp_text = ''
+                        if count == len(all_regions):
+                            final_comp = finished_people_last_comps[person]
+                            cursor.execute("select name from Competitions where id=%(id)s", {"id": final_comp})
+                            final_comp_name = cursor.fetchall()[0][0]
+                            final_comp_text = link(final_comp_name, f'https://www.worldcubeassociation.org/competitions/{final_comp}')
+                        row.append(final_comp_text)
+                        
+                    file.write(table_row(row))
                 file.write('</table>')
                 file.write(end)
 
