@@ -1,0 +1,14 @@
+[project]
+name = "regions-counter"
+
+version = "1.0.0"
+
+dependencies = [
+    "pyshp",
+    "pyproj",
+    "mysql.connector",
+    "requests"
+]
+
+[tool.setuptools]
+py-modules = []
