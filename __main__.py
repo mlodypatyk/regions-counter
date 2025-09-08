@@ -235,7 +235,7 @@ if __name__ == '__main__':
 
     # Generate menu file
     countries = collections.defaultdict(list)
-    for config in configs:
+    for config in get_local_configs(cursor, log) + configs:
         countries[config['country']].append(config)
 
     with open('output/index.html', 'w', encoding='utf-8') as menufile:
