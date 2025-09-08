@@ -5,3 +5,4 @@ nekoweb_secrets.py
 output/*
 .vscode
 regions_counter.egg-info
+cache.pickle

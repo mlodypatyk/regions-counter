@@ -1,19 +1,19 @@
 import shapefile
 import pyproj
-from time import time, ctime
 import collections
 import datetime
 import mysql.connector
 import os
-import shutil
+import pickle
+from time import time, ctime
 from shapely.geometry import Point, shape
 
-from dbsecrets import *
+from dbsecrets import SECRET_HOST, SECRET_DATABASE, SECRET_PASSWORD, SECRET_USER
 from localconfig import configs
-from renames import *
+from renames import renames
 from config_loader import get_local_configs
 
-global logtext
+global LOGTEXT
 
 def getRegion(point, shapes, records, namePos):
     potential_results = []
@@ -45,9 +45,9 @@ def link(title, url):
     return f'<a href="{url}">{title}</a>'
 
 def log(text):
-    global logtext
     print(text)
-    logtext += f'<p>{text}</p>'
+    global LOGTEXT
+    LOGTEXT += f'<p>{text}</p>'
 
 
 if __name__ == '__main__':
@@ -57,11 +57,15 @@ if __name__ == '__main__':
     else:
         mydb = mysql.connector.connect(host = SECRET_HOST, user = SECRET_USER, database = SECRET_DATABASE)
     cursor = mydb.cursor()
-    if os.path.isdir('output'):
-        shutil.rmtree('output')
 
-    logtext = ''
+    LOGTEXT = ''
     log(f'Started script at {ctime()}')
+
+    cache = {}
+    if os.path.isfile('cache.pickle'):
+        with open('cache.pickle', 'rb') as cache_file:
+            cache = pickle.load(cache_file)
+    log(str(cache))
 
     global_sf = shapefile.Reader('borders/World_Administrative_Divisions.zip')
            
@@ -112,12 +116,24 @@ if __name__ == '__main__':
             if countryId == current_config['country'] and date < datetime.datetime.now():
                 comp_dates[id] = date
                 current_region = getRegion(Point(transformer.transform(lat, lon)), shapes, records, current_config['namePos'])
-                if current_region == 'Rondonia':
-                    print(id)
                 if current_region:
                     comp_regions[id] = current_region
 
         log(f"Loaded comp regions in: {time() - time_start}s")
+
+
+        folder_path = os.path.join('output', current_config['country'])
+        file_path = os.path.join('output', current_config['country'], current_config['path_name']+'.html')
+
+        identifier = current_config['country'] + current_config['name']
+
+        if identifier in cache and cache[identifier] == len(comp_regions):
+            #check if file exists
+            if os.path.exists(file_path):
+                log('Cached results, skipping')
+                continue
+        else:
+            cache[identifier] = len(comp_regions)
 
         all_regions = set([region[current_config['namePos']] for region in records])
         person_comps = collections.defaultdict(set)
@@ -143,10 +159,13 @@ if __name__ == '__main__':
         all_persons = list(person_comps.keys())
         all_persons.sort(key=lambda x: (-len(person_regions[x]), comp_dates[finished_people_last_comps[x]] if x in finished_people_last_comps else None))
         
-        folder_path = os.path.join('output', current_config['country'])
-        file_path = os.path.join('output', current_config['country'], current_config['path_name']+'.html')
+
         if not os.path.isdir(folder_path):
             os.makedirs(folder_path)
+
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
         with open(file_path, 'w', encoding='utf-8') as file:
             with open('templates/region_ranking.html') as template:
                 template_text = ''.join([line for line in template])
@@ -243,7 +262,10 @@ if __name__ == '__main__':
             template_text = ''.join([line for line in template])
             start, end = template_text.split('%')
             logfile.write(start)
-            logfile.write(logtext)
+            logfile.write(LOGTEXT)
             logfile.write(end)
 
+    # Write cache file
+    with open('cache.pickle', 'wb') as cachefile:
+        pickle.dump(cache, cachefile)
     
