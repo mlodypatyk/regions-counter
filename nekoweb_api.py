@@ -1,5 +1,6 @@
 import requests
 import os
+import time
 from nekoweb_secrets import *
 
 api_url = "https://nekoweb.org/api/"
@@ -11,6 +12,10 @@ def create_folder(folder_name):
         "content-type": "application/x-www-form-urlencoded"
     }
     response = requests.request("POST", api_url+'files/create', data=payload, headers=headers)
+    if response.status_code == 429:
+        print('sleeping because too many request')
+        time.sleep(60)
+        return create_folder(folder_name)
     return response
 
 def upload_file(path, files):
@@ -21,6 +26,10 @@ def upload_file(path, files):
         "pathname": os.path.join(BASE_PATH, path)
     }
     response = requests.request("POST", api_url+'files/upload', headers=headers, data=data, files=files)
+    if response.status_code == 429:
+        print('sleeping because too many request')
+        time.sleep(60)
+        return upload_file(path, files)
     return response
 
 def get_folder(path):
@@ -33,6 +42,10 @@ def get_folder(path):
     }
 
     response = requests.request("GET", api_url+'files/readfolder', headers=headers, params=querystring)
+    if response.status_code == 429:
+        print('sleeping because too many request')
+        time.sleep(60)
+        return get_folder(path)
 
     return response
 

@@ -1,14 +1,25 @@
 import os
 import requests
 import json
+import time
 
 import nekoweb_api
 from nekoweb_secrets import *
+from dbsecrets import *
 from localconfig import configs
+from config_loader import get_local_configs
+import mysql.connector
 
 
 
 if __name__ == '__main__':
+    mydb = None
+    if SECRET_PASSWORD:
+        mydb = mysql.connector.connect(host = SECRET_HOST, user = SECRET_USER, database = SECRET_DATABASE, password = SECRET_PASSWORD)
+    else:
+        mydb = mysql.connector.connect(host = SECRET_HOST, user = SECRET_USER, database = SECRET_DATABASE)
+    cursor = mydb.cursor()
+
     limits = nekoweb_api.get_limits()
     print(limits.text)
 
@@ -16,7 +27,7 @@ if __name__ == '__main__':
 
     directory_data = json.loads(response.text)
 
-    for config in configs:
+    for config in get_local_configs(cursor, lambda x: print(x)) + configs:
         country = config['country']
         path_name = config['path_name']
         folders = [token['name'] for token in directory_data if token['dir']]

@@ -10,6 +10,8 @@ from shapely.geometry import Point, shape
 
 from dbsecrets import *
 from localconfig import configs
+from renames import *
+from config_loader import get_local_configs
 
 global logtext
 
@@ -60,19 +62,36 @@ if __name__ == '__main__':
 
     logtext = ''
     log(f'Started script at {ctime()}')
+
+    global_sf = shapefile.Reader('borders/World_Administrative_Divisions.zip')
            
-    for current_config in configs:
+    for current_config in get_local_configs(cursor, log) + configs:
 
         log(f'Running {current_config['country']}/{current_config['name']}')
         time_start = time()
-        try:
-            sf = shapefile.Reader(current_config['filePath'])   
-        except FileNotFoundError:
-            log(f'File for {current_config['country']}/{current_config['name']} is missing.')
-            continue
+        shapes = []
+        records = []
+        if current_config['filePath'] is not None:
+            try:
+                sf = shapefile.Reader(current_config['filePath'])   
+            except FileNotFoundError:
+                log(f'File for {current_config['country']}/{current_config['name']} is missing.')
+                continue
+            shapes = [shape(x) for x in sf.shapes() if x.shapeType != 0]
+            records = sf.records()
+        else:
+            country_name = current_config['country']
+            if country_name in renames:
+                if renames[country_name] is not None:
+                    country_name = renames[country_name]
+                else:
+                    log(f'{country_name} is missing from the global shapefile.')
+                    continue
+            for xshape, record in zip(global_sf.shapes(), global_sf.records()):
+                if record[3] == country_name and xshape.shapeType != 0:
+                    shapes.append(shape(xshape))
+                    records.append(record)
 
-        shapes = [shape(x) for x in sf.shapes() if x.shapeType != 0]
-        records = sf.records()
 
         comp_regions = {}
 
