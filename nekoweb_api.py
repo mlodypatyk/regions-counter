@@ -2,56 +2,61 @@ import requests
 import os
 import time
 from nekoweb_secrets import *
+import json
 
-api_url = "https://nekoweb.org/api/"
+class NekowebApi:
 
-def create_folder(folder_name):
-    payload = f'isFolder=true&pathname={os.path.join(BASE_PATH, folder_name)}'
-    headers = {
-        "Authorization": API_KEY,
-        "content-type": "application/x-www-form-urlencoded"
-    }
-    response = requests.request("POST", api_url+'files/create', data=payload, headers=headers)
-    if response.status_code == 429:
-        print('sleeping because too many request')
-        time.sleep(60)
-        return create_folder(folder_name)
-    return response
+    def __init__(self):
 
-def upload_file(path, files):
-    headers = {
-        "Authorization": API_KEY
-    }
-    data = {
-        "pathname": os.path.join(BASE_PATH, path)
-    }
-    response = requests.request("POST", api_url+'files/upload', headers=headers, data=data, files=files)
-    if response.status_code == 429:
-        print('sleeping because too many request')
-        time.sleep(60)
-        return upload_file(path, files)
-    return response
+        self.api_url = "https://nekoweb.org/api/"
+        response = self.get_limits()
+        response_obj = json.loads(response.text)
+        self.remaining = response_obj['general']['remaining']
+        self.reset = response_obj['general']['reset']
+        print(self.reset)
 
-def get_folder(path):
-    querystring = {
-        "pathname": path
-    }
+    def create_folder(self, folder_name):
+        payload = f'isFolder=true&pathname={os.path.join(BASE_PATH, folder_name)}'
+        headers = {
+            "content-type": "application/x-www-form-urlencoded"
+        }
+        return self.__request__("POST", self.api_url+'files/create', data=payload, headers=headers)
 
-    headers = {
-        "Authorization": API_KEY
-    }
+    def upload_file(self, path, files):
+        data = {
+            "pathname": os.path.join(BASE_PATH, path)
+        }
+        return self.__request__("POST", self.api_url+'files/upload', data=data, files=files)
+        
 
-    response = requests.request("GET", api_url+'files/readfolder', headers=headers, params=querystring)
-    if response.status_code == 429:
-        print('sleeping because too many request')
-        time.sleep(60)
-        return get_folder(path)
+    def get_folder(self, path):
+        querystring = {
+            "pathname": path
+        }
+        return self.__request__("GET", self.api_url+'files/readfolder', params=querystring)
 
-    return response
+    
+    def __request__(self, method, url, headers = None, params = None, data = None, files = None):
+        local_headers = {
+            "Authorization": API_KEY
+        }
+        if headers:
+            local_headers.update(headers)
+        if self.remaining == 0:
+            print(f'Sleeping for {self.reset} for rate limit')
+            time.sleep(self.reset)
+        response = requests.request(method, url, headers=local_headers, params=params, data=data, files=files)
+        if 'ratelimit-remaining' in  response.headers:
+            self.remaining = int(response.headers['ratelimit-remaining'])
+        if 'ratelimit-reset' in response.headers:
+            self.reset = int(response.headers['ratelimit-reset'])
+        return response
+        
+        
 
-def get_limits():
-    headers = {
-        "Authorization": API_KEY
-    }
-    response = requests.request("GET", api_url + 'files/limits', headers=headers)
-    return response
+    def get_limits(self):
+        headers = {
+            "Authorization": API_KEY
+        }
+        response = requests.request("GET", self.api_url + 'files/limits', headers=headers)
+        return response
