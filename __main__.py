@@ -5,6 +5,8 @@ import datetime
 import mysql.connector
 import os
 import pickle
+import requests
+import json
 from time import time, ctime
 from shapely.geometry import Point, shape
 
@@ -180,7 +182,10 @@ if __name__ == '__main__':
                 if all_persons:
                     if len(all_regions.difference(person_regions[all_persons[0]])) <= current_config['maxMissing']:
                         render_missing = True
-                        head.append(f'Missing (up to {current_config['maxMissing']})')
+                        if current_config['maxMissing'] == len(all_regions):
+                            head.append('Missing')
+                        else:
+                            head.append(f'Missing (up to {current_config['maxMissing']})')
                     if len(person_regions[all_persons[0]]) == len(all_regions):
                         render_completed = True
                         head.append('Completed at')
@@ -240,11 +245,20 @@ if __name__ == '__main__':
     for config in local_configs + configs:
         countries[config['country']].append(config)
 
+
+    export_date = ''
+    export_info = requests.request("GET", 'https://www.worldcubeassociation.org/api/v0/export/public')
+    if export_info.ok:
+        export_json = json.loads(export_info.text)
+        export_date = export_json['export_date'][:10]
+    
+
     with open('output/index.html', 'w', encoding='utf-8') as menufile:
         with open('templates/menu_file.html') as template:
             template_text = ''.join([line for line in template])
             start, end = template_text.split('%')
             menufile.write(start)
+            menufile.write(f'<span>This information is based on competition results owned and maintained by the World Cube Assocation, published at https://worldcubeassociation.org/results as of {export_date}.</span>')
             for country in sorted(list(countries.keys())):
                 menufile.write(f'<h1>{country}</h1>')
                 for config in countries[country]:

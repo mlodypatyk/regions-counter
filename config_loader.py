@@ -17,7 +17,7 @@ def get_local_configs(cursor, log):
                 log(f'{country_name} is missing from the global shapefile.')
                 continue
         local_region_name = ''
-        regions_count = 0
+        regions = set()
         name_counts = collections.defaultdict(int)
         max_occurences = 0
         for region in global_sf.records():
@@ -25,10 +25,12 @@ def get_local_configs(cursor, log):
             if region[3] == country_name:
                 name_counts[region[7]] += 1
                 max_occurences = max(max_occurences, name_counts[region[7]])
-                regions_count += 1
+                regions.add(region[2])
         for name in name_counts:
             if name_counts[name] == max_occurences:
                 local_region_name = name
+
+        regions_count = len(regions)
 
         new_config = {
             'name': local_region_name,
@@ -37,7 +39,7 @@ def get_local_configs(cursor, log):
             'filePath': None,
             'projParams': 'PROJCS["WGS_1984_Web_Mercator_Auxiliary_Sphere",GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Mercator_Auxiliary_Sphere"],PARAMETER["False_Easting",0.0],PARAMETER["False_Northing",0.0],PARAMETER["Central_Meridian",0.0],PARAMETER["Standard_Parallel_1",0.0],PARAMETER["Auxiliary_Sphere_Type",0.0],UNIT["Meter",1.0]]',
             'printNumber': 100,
-            'maxMissing': 10,
+            'maxMissing': min(max(20, regions_count // 2), regions_count),
             'namePos': 2
         }
         if not local_region_name:
