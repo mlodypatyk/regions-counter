@@ -68,8 +68,10 @@ if __name__ == '__main__':
     log(str(cache))
 
     global_sf = shapefile.Reader('borders/World_Administrative_Divisions.zip')
+
+    local_configs = get_local_configs(cursor, log)
            
-    for current_config in get_local_configs(cursor, log) + configs:
+    for current_config in local_configs + configs:
 
         log(f'Running {current_config['country']}/{current_config['name']}')
         time_start = time()
@@ -235,7 +237,7 @@ if __name__ == '__main__':
 
     # Generate menu file
     countries = collections.defaultdict(list)
-    for config in get_local_configs(cursor, log) + configs:
+    for config in local_configs + configs:
         countries[config['country']].append(config)
 
     with open('output/index.html', 'w', encoding='utf-8') as menufile:
