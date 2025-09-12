@@ -175,6 +175,7 @@ if __name__ == '__main__':
                 template_text = ''.join([line for line in template])
                 start, end = template_text.split('%')
                 file.write(start)
+                file.write(f'<title>{current_config['country']}: {current_config['name']}</title>')
                 file.write('<table>')
                 head = ['Position', 'Person', 'Region count']
                 render_missing = False
