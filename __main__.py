@@ -72,6 +72,10 @@ if __name__ == '__main__':
     global_sf = shapefile.Reader('borders/World_Administrative_Divisions.zip')
 
     local_configs = get_local_configs(cursor, log)
+
+    # this is disgusting but idk how to do it otherwise
+    cursor.execute('select id from Competitions where (cityName like "%Flere byer%" or cityName like "%Multiple%" or cityName like "%Múltiplas%" or cityName = "Kyiv and Kharkiv") and eventSpecs = "333fm" and countryId not like "X%"')
+    multiple_locations_fmc = [comp[0] for comp in cursor]
            
     for current_config in local_configs + configs:
 
@@ -117,7 +121,7 @@ if __name__ == '__main__':
             lon /= 1_000_000
             date = datetime.datetime(year, month, day)
             #print(id, countryId, lat, lon)
-            if countryId == current_config['country'] and date < datetime.datetime.now():
+            if countryId == current_config['country'] and date < datetime.datetime.now() and id not in multiple_locations_fmc:
                 comp_dates[id] = date
                 current_region = getRegion(Point(transformer.transform(lat, lon)), shapes, records, current_config['namePos'])
                 if current_region:
