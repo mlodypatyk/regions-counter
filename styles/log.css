@@ -1,0 +1,16 @@
+body{
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    margin-bottom: 0px;
+}
+p {
+    margin: 0px;
+}
+.error{
+    color: red;
+}
+.good{
+    color:limegreen;
+}
+.countryStart {
+    margin-top: 1em;
+}

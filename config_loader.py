@@ -14,7 +14,7 @@ def get_local_configs(cursor, log):
             if renames[country_name] is not None:
                 country_name = renames[country_name]
             else:
-                log(f'{country_name} is missing from the global shapefile.')
+                log(f'{country_name} is missing from the global shapefile.', 'error')
                 continue
         local_region_name = ''
         regions = set()

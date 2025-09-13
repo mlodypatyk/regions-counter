@@ -23,8 +23,8 @@ def getRegion(point, shapes, records, namePos):
         if point.within(polygon):
             potential_results.append(record[namePos])
     if len(potential_results) > 1:
-        log("SIUR NA OGÓLNYM")
-        log(potential_results)
+        log('SIUR NA OGÓLNYM', 'error')
+        log(potential_results, 'error')
     if potential_results:
         return potential_results[0]
     return None
@@ -46,10 +46,13 @@ def table_row(elements):
 def link(title, url):
     return f'<a href="{url}">{title}</a>'
 
-def log(text):
+def log(text, logclass = None):
     print(text)
     global LOGTEXT
-    LOGTEXT += f'<p>{text}</p>'
+    if logclass:
+        LOGTEXT += f'<p class="{logclass}">{text}</p>'
+    else: 
+        LOGTEXT += f'<p>{text}</p>'
 
 
 if __name__ == '__main__':
@@ -79,7 +82,7 @@ if __name__ == '__main__':
            
     for current_config in local_configs + configs:
 
-        log(f'Running {current_config['country']}/{current_config['name']}')
+        log(f'Running {current_config['country']}/{current_config['name']}', 'countryStart')
         time_start = time()
         shapes = []
         records = []
@@ -138,7 +141,7 @@ if __name__ == '__main__':
         if identifier in cache and cache[identifier] == len(comp_regions):
             #check if file exists
             if os.path.exists(file_path):
-                log('Cached results, skipping')
+                log('Cached results, skipping', 'good')
                 continue
         else:
             cache[identifier] = len(comp_regions)
