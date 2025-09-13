@@ -39,4 +39,14 @@ configs = [
         'maxMissing': 10,
         'namePos': 3
     },
+    {
+        'name': 'States and territories',
+        'path_name': 'states_and_territories',
+        'country': 'USA',
+        'filePath': 'borders/USA/states_and_territories.zip',
+        'projParams': 'GEOGCS["GCS_North_American_1983",DATUM["D_North_American_1983",SPHEROID["GRS_1980",6378137,298.257222101]],PRIMEM["Greenwich",0],UNIT["Degree",0.017453292519943295]]',
+        'printNumber': 100,
+        'maxMissing': 10,
+        'namePos': 5
+    }
 ]

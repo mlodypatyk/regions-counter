@@ -9,3 +9,5 @@
 [Taiwan](https://data.humdata.org/dataset/whosonfirst-data-admin-twn)
 
 [Hong Kong](https://opendata.esrichina.hk/datasets/hong-kong-18-districts/explore)
+
+[USA](https://www.census.gov/geographies/mapping-files/time-series/geo/carto-boundary-file.html)
