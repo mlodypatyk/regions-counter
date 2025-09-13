@@ -177,16 +177,9 @@ if __name__ == '__main__':
                 file.write(start)
                 file.write(f'<title>{current_config['country']}: {current_config['name']}</title>')
                 file.write('<table>')
-                head = ['Position', 'Person', 'Region count']
-                render_missing = False
+                head = ['Position', 'Person', 'Region count', '<span class="missing">Missing</span><span class="completed" style="display: none;">Completed</span>']
                 render_completed = False
                 if all_persons:
-                    if len(all_regions.difference(person_regions[all_persons[0]])) <= current_config['maxMissing']:
-                        render_missing = True
-                        if current_config['maxMissing'] == len(all_regions):
-                            head.append('Missing')
-                        else:
-                            head.append(f'Missing (up to {current_config['maxMissing']})')
                     if len(person_regions[all_persons[0]]) == len(all_regions):
                         render_completed = True
                         head.append('Completed at')
@@ -205,28 +198,31 @@ if __name__ == '__main__':
 
                     row = [last_pos, link(person_name, f'https://www.worldcubeassociation.org/persons/{person}'), f'{count}/{len(all_regions)}']
 
-                    if render_missing:
-                        missing = all_regions.difference(person_regions[person])
-                        missing_text = ''
-                        if len(missing) <= current_config['maxMissing']:
-                            missing_with_comp = []
-                            missing_without_comp = []
-                            for region in missing:
-                                if region not in comp_regions.values():
-                                    missing_without_comp.append(region)
-                                else:
-                                    missing_with_comp.append(region)
+                    missing = all_regions.difference(person_regions[person])
+                    missing_text = ''
+                    missing_with_comp = []
+                    missing_without_comp = []
+                    for region in missing:
+                        if region not in comp_regions.values():
+                            missing_without_comp.append(region)
+                        else:
+                            missing_with_comp.append(region)
 
-                            missing_with_comp.sort()
-                            missing_without_comp.sort()
-                            if len(missing_without_comp):
-                                missing_without_comp[0] = '<span class="noComp">' + missing_without_comp[0]
-                                if len(missing_with_comp):
-                                    missing_with_comp[0] = '</span>' + missing_with_comp[0]
-                                else:
-                                    missing_without_comp[-1] += '</span>'
-                            missing_text = ', '.join(missing_without_comp + missing_with_comp)
-                        row.append(missing_text)
+                    missing_with_comp.sort()
+                    missing_without_comp.sort()
+                    if len(missing_without_comp):
+                        missing_without_comp[0] = '<span class="noComp">' + missing_without_comp[0]
+                        if len(missing_with_comp):
+                            missing_with_comp[0] = '</span>' + missing_with_comp[0]
+                        else:
+                            missing_without_comp[-1] += '</span>'
+                    missing_text = '<span class="missing">' + ', '.join(missing_without_comp + missing_with_comp) + '</span>'
+
+                    completed = list(person_regions[person])
+                    completed.sort()
+                    completed_text = '<span class="completed" style="display: none;">' + ', '.join(completed) + '</span>'
+
+                    row.append(missing_text + completed_text)
 
                     if render_completed:
                         final_comp_text = ''

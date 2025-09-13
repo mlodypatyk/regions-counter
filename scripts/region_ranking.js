@@ -13,3 +13,17 @@ checkbox.addEventListener("change", (change) => {
         }
     }
 })
+
+checkbox2 = document.getElementById("tick2")
+missing = document.getElementsByClassName("missing")
+completed = document.getElementsByClassName("completed")
+
+checkbox2.addEventListener("change", (change) => {
+
+    for (i=0;i<missing.length;i++){
+        missing[i].style.display = checkbox2.checked ? "none" : ""
+    }
+    for (i=0;i<completed.length;i++){
+        completed[i].style.display = checkbox2.checked ? "" : "none"
+    }
+})
