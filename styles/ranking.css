@@ -34,3 +34,31 @@ th {
     top: 0;
     text-align: center;
 }
+@media (prefers-color-scheme: dark) {
+    body {
+    background-color: color-mix(in srgb, Canvas, CanvasText 2.5%);
+    color: color-mix(in srgb, CanvasText, Canvas 15%);
+    color-scheme: light dark;
+    }
+    footer{
+        background-color: color-mix(in srgb, Canvas, CanvasText 2.5%);
+    }
+    a {
+        color: lightskyblue;
+    }
+    a:visited {
+        color: lightskyblue;
+    }
+    thead {
+        background-color: color-mix(in srgb, Canvas, CanvasText 2.5%);
+    }
+    tr:nth-child(even){
+        background-color: color-mix(in srgb, Canvas, #D6EEEE 15%);
+    }
+    
+}
+@media only screen and (max-width: 600px){
+    body {
+        font-size: 30px;
+    }
+}

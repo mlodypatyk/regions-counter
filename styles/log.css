@@ -14,3 +14,13 @@ p {
 .countryStart {
     margin-top: 1em;
 }
+@media (prefers-color-scheme: dark) {
+    body {
+    background-color: color-mix(in srgb, Canvas, CanvasText 2.5%);
+    color: color-mix(in srgb, CanvasText, Canvas 15%);
+    color-scheme: light dark;
+    }
+    footer{
+        background-color: color-mix(in srgb, Canvas, CanvasText 2.5%);
+    }
+}

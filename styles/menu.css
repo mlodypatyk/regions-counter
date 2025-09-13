@@ -14,3 +14,20 @@ footer{
     padding-bottom: 10px;
     border-top: 1px black;
 }
+@media (prefers-color-scheme: dark) {
+    body {
+    background-color: color-mix(in srgb, Canvas, CanvasText 2.5%);
+    color: color-mix(in srgb, CanvasText, Canvas 15%);
+    color-scheme: light dark;
+    }
+    footer{
+        background-color: color-mix(in srgb, Canvas, CanvasText 2.5%);
+    }
+    a {
+        color: lightskyblue;
+    }
+    a:visited {
+        color: lightskyblue;
+    }
+    
+}
