@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
     directory_data = json.loads(response.text)
 
-    for config in get_local_configs(cursor, lambda x: print(x)) + configs:
+    for config in get_local_configs(cursor, lambda x, y=None: print(x)) + configs:
         country = config['country']
         path_name = config['path_name']
         folders = [token['name'] for token in directory_data if token['dir']]
