@@ -37,7 +37,7 @@ configs = [
         'projParams': 'GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]]',
         'printNumber': 100,
         'maxMissing': 10,
-        'namePos': 3
+        'namePos': 2
     },
     {
         'name': 'States and territories',
