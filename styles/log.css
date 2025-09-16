@@ -24,3 +24,6 @@ p {
         background-color: color-mix(in srgb, Canvas, CanvasText 2.5%);
     }
 }
+p {
+    white-space: pre;                                                       
+}

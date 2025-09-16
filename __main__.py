@@ -49,10 +49,11 @@ def link(title, url):
 def log(text, logclass = None):
     print(text)
     global LOGTEXT
-    if logclass:
-        LOGTEXT += f'<p class="{logclass}">{text}</p>'
-    else: 
-        LOGTEXT += f'<p>{text}</p>'
+    for line in str(text).split('\n'):
+        if logclass:
+            LOGTEXT += f'<p class="{logclass}">{line}</p>'
+        else: 
+            LOGTEXT += f'<p>{line}</p>'
 
 
 if __name__ == '__main__':
@@ -74,7 +75,7 @@ if __name__ == '__main__':
             cache = pickle.load(cache_file)
             finished_regions = cache['finished_regions']
             comp_counts = cache['comp_counts']
-    log(str(cache))
+    log(json.dumps(cache, indent=4))
 
     global_sf = shapefile.Reader('borders/World_Administrative_Divisions.zip')
 
