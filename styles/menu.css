@@ -14,6 +14,15 @@ footer{
     padding-bottom: 10px;
     border-top: 1px black;
 }
+.completed a {
+    font-weight: bold;
+    color: violet;
+}
+.header {
+    position: sticky;
+    top: 0;
+    background-color: white;
+}
 @media (prefers-color-scheme: dark) {
     body {
     background-color: color-mix(in srgb, Canvas, CanvasText 2.5%);
@@ -29,5 +38,13 @@ footer{
     a:visited {
         color: lightskyblue;
     }
-    
+    .completed a{
+        color: darkviolet;
+    }
+    .completed a:visited {
+        color: darkviolet;
+    }
+    .header{
+        background-color: color-mix(in srgb, Canvas, CanvasText 2.5%);
+    }
 }

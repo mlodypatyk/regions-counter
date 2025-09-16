@@ -67,9 +67,13 @@ if __name__ == '__main__':
     log(f'Started script at {ctime()}')
 
     cache = {}
+    finished_regions = []
+    comp_counts = {}
     if os.path.isfile('cache.pickle'):
         with open('cache.pickle', 'rb') as cache_file:
             cache = pickle.load(cache_file)
+            finished_regions = cache['finished_regions']
+            comp_counts = cache['comp_counts']
     log(str(cache))
 
     global_sf = shapefile.Reader('borders/World_Administrative_Divisions.zip')
@@ -138,13 +142,13 @@ if __name__ == '__main__':
 
         identifier = current_config['country'] + current_config['name']
 
-        if identifier in cache and cache[identifier] == len(comp_regions):
+        if identifier in comp_counts and comp_counts[identifier] == len(comp_regions):
             #check if file exists
             if os.path.exists(file_path):
                 log('Cached results, skipping', 'good')
                 continue
         else:
-            cache[identifier] = len(comp_regions)
+            comp_counts[identifier] = len(comp_regions)
 
         all_regions = set([region[current_config['namePos']] for region in records])
         person_comps = collections.defaultdict(set)
@@ -189,6 +193,7 @@ if __name__ == '__main__':
                 if all_persons:
                     if len(person_regions[all_persons[0]]) == len(all_regions):
                         render_completed = True
+                        finished_regions.append(f'{current_config['country']}{current_config['name']}')
                         head.append('Completed at')
                 file.write(table_head(head))
                 last_count = 0
@@ -262,14 +267,20 @@ if __name__ == '__main__':
             template_text = ''.join([line for line in template])
             start, end = template_text.split('%')
             menufile.write(start)
-            menufile.write(f'<span>This information is based on competition results owned and maintained by the World Cube Assocation, published at https://worldcubeassociation.org/results as of {export_date}.</span>')
+            menufile.write('<div class="header">')
+            menufile.write(f'<span>This information is based on competition results owned and maintained by the World Cube Assocation, published at https://worldcubeassociation.org/results as of {export_date}.</span><br>')
+            menufile.write(f'<span>Subdivions that someone completed (competed in all of them) are marked <span class="completed"><a>as such.</a></spanp></span>')
+            menufile.write('</div>')
             for country in sorted(list(countries.keys())):
                 menufile.write(f'<h1>{country}</h1>')
                 for config in countries[country]:
                     country = config['country']
                     path = config['path_name']
                     name = config['name']
-                    menufile.write('<p>')
+                    if f'{config['country']}{config['name']}' in finished_regions:
+                        menufile.write('<p class="completed">')
+                    else:
+                        menufile.write('<p>')
                     menufile.write(link(name, f'{country}/{path}.html'))
                     menufile.write('</p>')
             menufile.write(end)
@@ -287,5 +298,6 @@ if __name__ == '__main__':
 
     # Write cache file
     with open('cache.pickle', 'wb') as cachefile:
-        pickle.dump(cache, cachefile)
+        new_cache = {'finished_regions': finished_regions, 'comp_counts': comp_counts}
+        pickle.dump(new_cache, cachefile)
     
