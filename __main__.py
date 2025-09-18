@@ -187,15 +187,19 @@ if __name__ == '__main__':
                 template_text = ''.join([line for line in template])
                 start, end = template_text.split('%')
                 file.write(start)
-                file.write(f'<title>{current_config['country']}: {current_config['name']}</title>')
-                file.write('<table>')
                 head = ['Position', 'Person', 'Region count', '<span class="missing">Missing</span><span class="completed" style="display: none;">Completed</span>']
                 render_completed = False
+                show_completed_as_default = True
                 if all_persons:
                     if len(person_regions[all_persons[0]]) == len(all_regions):
                         render_completed = True
                         finished_regions.append(f'{current_config['country']}{current_config['name']}')
                         head.append('Completed at')
+                    if len(person_regions[all_persons[0]]) > len(all_regions)/2:
+                        show_completed_as_default = False
+                file.write(f'<div class="topMenu"><input type="checkbox" id="tick"> Hide regions with no comps<input type="checkbox" id="tick2"{' checked' if show_completed_as_default else ''}> Toggle missing/completed</div>')
+                file.write(f'<title>{current_config['country']}: {current_config['name']}</title>')
+                file.write('<table>')
                 file.write(table_head(head))
                 last_count = 0
                 last_last_comp = ''
@@ -229,11 +233,11 @@ if __name__ == '__main__':
                             missing_with_comp[0] = '</span>' + missing_with_comp[0]
                         else:
                             missing_without_comp[-1] += '</span>'
-                    missing_text = '<span class="missing">' + ', '.join(missing_without_comp + missing_with_comp) + '</span>'
+                    missing_text = f'<span class="missing"{' style="display: none;"' if show_completed_as_default else ''}>' + ', '.join(missing_without_comp + missing_with_comp) + '</span>'
 
                     completed = list(person_regions[person])
                     completed.sort()
-                    completed_text = '<span class="completed" style="display: none;">' + ', '.join(completed) + '</span>'
+                    completed_text = f'<span class="completed"{' style="display: none;"' if not show_completed_as_default else ''}>' + ', '.join(completed) + '</span>'
 
                     row.append(missing_text + completed_text)
 
