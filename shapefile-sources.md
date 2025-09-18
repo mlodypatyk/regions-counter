@@ -11,3 +11,5 @@
 [Hong Kong](https://opendata.esrichina.hk/datasets/hong-kong-18-districts/explore)
 
 [USA](https://www.census.gov/geographies/mapping-files/time-series/geo/carto-boundary-file.html)
+
+[Portugal](https://data.metabolismofcities.org/library/35879/)
