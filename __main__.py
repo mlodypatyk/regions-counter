@@ -187,16 +187,18 @@ if __name__ == '__main__':
                 template_text = ''.join([line for line in template])
                 start, end = template_text.split('%')
                 file.write(start)
-                head = ['Position', 'Person', 'Region count', '<span class="missing">Missing</span><span class="completed" style="display: none;">Completed</span>']
+                head = ['Position', 'Person', 'Region count']
                 render_completed = False
                 show_completed_as_default = True
                 if all_persons:
                     if len(person_regions[all_persons[0]]) == len(all_regions):
                         render_completed = True
                         finished_regions.append(f'{current_config['country']}{current_config['name']}')
-                        head.append('Completed at')
                     if len(person_regions[all_persons[0]]) > len(all_regions)/2:
                         show_completed_as_default = False
+                head.append(f'<span class="missing" style="display: {'none' if show_completed_as_default else ''};">Missing</span><span class="completed" style="display: {'' if show_completed_as_default else 'none'};">Completed</span>')
+                if render_completed:
+                    head.append('Completed at')
                 file.write(f'<div class="topMenu"><input type="checkbox" id="tick"> Hide regions with no comps<input type="checkbox" id="tick2"{' checked' if show_completed_as_default else ''}> Toggle missing/completed</div>')
                 file.write(f'<title>{current_config['country']}: {current_config['name']}</title>')
                 file.write('<table>')
